@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:udemy_music_app/lib/spotify.dart';
 
 void main() async {
   await dotenv.load(fileName: '.env');
+  await setupSpotify();
   runApp(const MyApp());
+  spotify.test();
 }
 
 class MyApp extends StatelessWidget {
