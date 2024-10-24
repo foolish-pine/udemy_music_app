@@ -1,48 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:udemy_music_app/lib/spotify.dart';
+import 'package:udemy_music_app/widgets/song_card.dart';
 
 void main() async {
   await dotenv.load(fileName: '.env');
   await setupSpotify();
-  runApp(const MyApp());
-  spotify.test();
+  runApp(const MaterialApp(
+    home: MusicApp(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MusicApp extends StatefulWidget {
+  const MusicApp({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
+  State<MusicApp> createState() => _MusicAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _MusicAppState extends State<MusicApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: const Color(0xFF0E0E10),
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              'Music App',
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            )
+          ],
+        ),
       ),
-      body: const Center(),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1C1C1E),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.search, color: Colors.white, size: 24),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: '探したい曲を入力してください',
+                                hintStyle: TextStyle(color: Colors.white70),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Songs',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: GridView.count(
+                      childAspectRatio: 0.75,
+                      crossAxisCount: 2,
+                      children: const [
+                        SongCard(),
+                        SongCard(),
+                        SongCard(),
+                        SongCard(),
+                        SongCard(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      backgroundColor: const Color(0xFF0E0E10),
     );
   }
 }
