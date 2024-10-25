@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:udemy_music_app/modules/songs/song.dart';
 
 late SpotifyClient spotify;
 
@@ -8,7 +9,7 @@ Future setupSpotify() async {
 }
 
 class SpotifyClient {
-  late final String token;
+  late final String _token;
   static Dio dio = Dio();
 
   static Future<SpotifyClient> initialize() async {
@@ -23,11 +24,23 @@ class SpotifyClient {
             headers: {'Content-Type': 'application/x-www-form-urlencoded'}));
 
     SpotifyClient spotify = SpotifyClient();
-    spotify.token = response.data['access_token'];
+    spotify._token = response.data['access_token'];
     return spotify;
   }
 
-  void test() {
-    print(token);
+  Future<List<Song>> getPopularSongs() async {
+    Response response = await dio.get(
+        'https://api.spotify.com/v1/playlists/37i9dQZF1DX9vYRBO9gjDe/tracks',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}));
+
+    return response.data['items'].map<Song>((item) {
+      final song = item['track'];
+      return Song.fromJson({
+        'name': song['name'],
+        'artistName': song['artists'][0]['name'],
+        'albumImageUrl': song['album']['images'][0]['url'],
+        'previewUrl': song['preview_url']
+      });
+    }).toList();
   }
 }
