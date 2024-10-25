@@ -26,10 +26,16 @@ class MusicApp extends StatefulWidget {
 
 class _MusicAppState extends State<MusicApp> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final ScrollController _controller = ScrollController();
+  final _limit = 20;
   List<Song> _popularSongs = [];
   bool _isInitialized = false;
   Song? _selectedSong;
   bool _isPlay = false;
+  String _keyword = '';
+  List<Song>? _searchedSongs;
+  int page = 1;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -38,6 +44,13 @@ class _MusicAppState extends State<MusicApp> {
   }
 
   void _initialize() async {
+    _controller.addListener(() {
+      if (_controller.position.maxScrollExtent - 100 < _controller.offset &&
+          _searchedSongs != null) {
+        _searchSongs();
+      }
+    });
+
     final songs = await spotify.getPopularSongs();
 
     setState(() {
@@ -77,8 +90,35 @@ class _MusicAppState extends State<MusicApp> {
     _play();
   }
 
+  void _handleTextFieldChanged(String value) {
+    setState(() {
+      _keyword = value;
+    });
+  }
+
+  void _searchSongs() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final offset = page * _limit;
+    final songs = await spotify.searchSongs(
+        keyword: _keyword, limit: _limit, offset: offset);
+
+    setState(() {
+      page++;
+      _searchedSongs =
+          _searchedSongs != null ? [..._searchedSongs!, ...songs] : songs;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final songs = _searchedSongs ?? _popularSongs;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0E0E10),
@@ -110,16 +150,19 @@ class _MusicAppState extends State<MusicApp> {
                       color: const Color(0xFF1C1C1E),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
                       child: Row(
                         children: [
-                          Icon(Icons.search, color: Colors.white, size: 24),
-                          SizedBox(width: 8),
+                          const Icon(Icons.search,
+                              color: Colors.white, size: 24),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
-                              style: TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
+                              onChanged: _handleTextFieldChanged,
+                              onEditingComplete: () => _searchSongs(),
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
                                 hintText: '探したい曲を入力してください',
                                 hintStyle: TextStyle(color: Colors.white70),
                                 border: InputBorder.none,
@@ -144,15 +187,16 @@ class _MusicAppState extends State<MusicApp> {
                       child: !_isInitialized
                           ? Container()
                           : CustomScrollView(
+                              controller: _controller,
                               slivers: [
                                 SliverToBoxAdapter(
                                     child: LayoutGrid(
                                   columnSizes: [1.fr, 1.fr],
                                   rowSizes:
                                       List<IntrinsicContentTrackSize>.generate(
-                                          (_popularSongs.length / 2).round(),
+                                          (songs.length / 2).round(),
                                           (int index) => auto),
-                                  children: _popularSongs
+                                  children: songs
                                       .map((song) => SongCard(
                                             song: song,
                                             onTap: _handleSongSelected,
